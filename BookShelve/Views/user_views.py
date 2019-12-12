@@ -3,8 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from BookShelve.Services import user_service
 from rest_framework_simplejwt import views as jwt_views
-from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from pymemcache.client import base
+from BookShelve.serializer import CustomTokenObtainPairSerializer
 
 class RegistrUserView(APIView):
 
@@ -21,9 +22,11 @@ class RegistrUserView(APIView):
 
 class LoginView( jwt_views.TokenObtainPairView):
 
+    serializer_class = CustomTokenObtainPairSerializer
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
+        
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -34,15 +37,13 @@ class LoginView( jwt_views.TokenObtainPairView):
         return Response( "Tokens was save" )
 
 
-    #!!!
+    #Prototype!!!
 class RefreshAccessTokenView(jwt_views.TokenRefreshView): 
 
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        info = token_service.DecodeToken(token_service.ReturnAccessToken())
-        client = base.Client(('localhost', 11211))
-        refresh_token = client.get('{}_refresh'.format(info['user_id']))
+        refresh_token = tokens_service. get_refresh_token()
         print(refresh_token)
         data = self.authenticate(refresh_token)[1] 
 

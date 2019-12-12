@@ -4,6 +4,7 @@ from pymemcache.client import base
 from BookShelve.Services import token_service
 
 
+
 def register_user(request):
     serialized = UserSerializer(data = request.data )
 

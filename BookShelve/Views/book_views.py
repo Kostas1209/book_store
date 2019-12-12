@@ -4,13 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
-
 # +
 class BooksView(APIView): ## See book catalog for all users
 
     permission_classes = (AllowAny, )
 
-    def get(self, request):
+    def get(self, request = None):
         books = book_service.get_all_books()
         return Response( {"books" : books} )
 
@@ -24,7 +23,8 @@ class GetSingleBookView(APIView):
 
 
 class AddBookView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         try:
             message = book_service.add_book(request)
@@ -45,3 +45,17 @@ class ChangeBookView(APIView):
 
 
         return Response("Books were added to your basket")
+
+
+class SearchSimilarBooksView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        
+        try:
+            books = book_service.get_similar_books(request)
+        except Exception as e:
+            print(e)
+            return Response("error")
+
+        return Response({"books": books})

@@ -25,7 +25,7 @@ urlpatterns = [
     path('registr/', user_views.RegistrUserView.as_view() ), # +
     path('login/', user_views.LoginView.as_view()), # +
     path('login/refresh/',user_views.RefreshAccessTokenView.as_view() ),
-
-    path('change_book/', book_views.ChangeBookView.as_view()), # doesn't check autentefication
+    path('change_book/', book_views.ChangeBookView.as_view()),          
+    path('search/', book_views.SearchSimilarBooksView.as_view()),
     #path('take_books/', MakeOrderView.as_view()),
 ]
