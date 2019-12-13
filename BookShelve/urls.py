@@ -19,13 +19,14 @@ from django.urls import path, include
 from .Views import book_views, user_views
 
 urlpatterns = [
-    path('bookcatalog/', book_views.BooksView.as_view() ), # +
-    path('singlebook/', book_views.GetSingleBookView.as_view() ), # + 
-    path('addbook/', book_views.AddBookView.as_view() ), # +
+    path('book_catalog/', book_views.BooksView.as_view() ), # +
+    path('single_book/', book_views.GetSingleBookView.as_view() ), # + 
+    path('add_book/', book_views.AddBookView.as_view() ), # +
     path('registr/', user_views.RegistrUserView.as_view() ), # +
     path('login/', user_views.LoginView.as_view()), # +
     path('login/refresh/',user_views.RefreshAccessTokenView.as_view() ),
-    path('change_book/', book_views.ChangeBookView.as_view()),          
-    path('search/', book_views.SearchSimilarBooksView.as_view()),
-    #path('take_books/', MakeOrderView.as_view()),
+    path('choose_book/', book_views.UserBasketView.as_view()),     # +    
+    path('search/', book_views.SearchSimilarBooksView.as_view()), # +
+    path('sell_books/', book_views.MakeOrderView.as_view()), # +
+
 ]

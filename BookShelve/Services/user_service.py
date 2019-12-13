@@ -1,7 +1,9 @@
-from BookShelve.serializer import  UserSerializer
-from django.contrib.auth.models import User
+import os
 from pymemcache.client import base
+from django.contrib.auth.models import User
 from BookShelve.Services import token_service
+from BookShelve.serializer import  UserSerializer
+
 
 
 
@@ -26,23 +28,13 @@ def register_user(request):
 
 
 def save_tokens(data):
-    client = base.Client(('localhost', 11211))
-
-    info = token_service.DecodeToken(data["access"]) # get info from  access token
-
-    # write to cache refresh token
-    client.set('{}_refresh'.format(info['user_id']), data['refresh'])
-
-    # Write to cache access token 
-    client.set('{}_access'.format(info['user_id']), data['access'])
+    # save tokens in front
 
     return 
 
 
 def save_access_token( data ):
 
-    # Write to cache access token 
-    client = base.Client(('localhost', 11211))
-    client.set('{}_access'.format(info['user_id']), data['access'])
+    # save access token in front
 
     return 

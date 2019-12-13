@@ -45,16 +45,16 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = ( 'title', 'amount_in_storage', 'author', 'price' )
 
-class SearchBooksSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = ( 'title',)
+#class SearchBooksSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = Book
+#        fields = ( 'title',)
 
 
 class BookChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserBasket
-        fields = ('book_id','user_id','amount')
+        fields = ('book_id','amount')
 
 
 class UserSerializer(serializers.Serializer):
@@ -65,9 +65,11 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
-class LoginSerializer(serializers.Serializer):
+#class LoginSerializer(serializers.Serializer):
 
-    password = serializers.CharField()
-    username = serializers.CharField(max_length=120)
+#    password = serializers.CharField()
+#    username = serializers.CharField(max_length=120)
+
+
 
 
