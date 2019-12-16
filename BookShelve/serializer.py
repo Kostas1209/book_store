@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import  TokenObtainSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -30,6 +31,7 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
         return RefreshToken.for_user(user)
 
     def validate(self, attrs):
+
         data = super().validate(attrs)
 
         refresh = self.get_token(self.user)
@@ -44,11 +46,6 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ( 'title', 'amount_in_storage', 'author', 'price' )
-
-#class SearchBooksSerializer(serializers.ModelSerializer):
-#    class Meta:
-#        model = Book
-#        fields = ( 'title',)
 
 
 class BookChangeSerializer(serializers.ModelSerializer):
@@ -65,10 +62,6 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
-#class LoginSerializer(serializers.Serializer):
-
-#    password = serializers.CharField()
-#    username = serializers.CharField(max_length=120)
 
 
 

@@ -15,12 +15,12 @@ def DecodeToken(token):
         d[result[i]] = result[i+1]
     return d
 
-def ReturnAccessToken(user_id):
-    client = base.Client(('localhost', 11211)) # What is it numbers !!!
-
-    return client.get('{}_access'.format(user_id))
-
 def GetRefreshToken(user_id):
-    client = base.Client(('localhost', 11211)) # What is it numbers !!!
 
-    return client.get('{}_refresh'.format(user_id))
+    client = base.Client(('localhost', 11211))
+
+    return client.get(user_id)
+
+def delete_refresh_token(user_id):
+    client = base.Client(('localhost', 11211))
+    delete user_id

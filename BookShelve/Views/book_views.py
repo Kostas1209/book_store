@@ -3,7 +3,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-
+from BookShelve.exceptions import *
 
 class BooksView(APIView): 
     '''
@@ -15,7 +15,10 @@ class BooksView(APIView):
     permission_classes = (AllowAny, )
 
     def get(self, request = None):
-        books = book_service.get_all_books()
+        try:
+            books = book_service.get_all_books()
+        except NotExist:
+            return Response("Have not at now",status = 404)
         return Response(  books , status = 200 )
 
 
@@ -26,7 +29,12 @@ class GetSingleBookView(APIView):
         '''
     permission_classes = (AllowAny,) 
     def get (self, request ):
-        book = book_service.get_book(request)
+        try:
+            book = book_service.get_book(request)
+        except NotExist:
+            return Response("Book does not exist", status = 404)
+        except ValueError:
+            return Response("wrong format of input data", status = 400)
         return Response(  book , status = 200 )
 
  
@@ -42,8 +50,8 @@ class AddBookView(APIView):
     def post(self, request):
         try:
             message = book_service.add_book(request)
-        except Exception as e:
-            return Response(e, status = 500)
+        except NotEnought as e:
+            return Response("Not enought books in the storage", status = 400)
 
         return Response(message , status = 201)
 
@@ -61,8 +69,8 @@ class UserBasketView(APIView):
         '''
         try:
             ordered_books = book_service.get_ordered_books(request)
-        except Exception as e:
-            return Response(str(e) ,status = 500)
+        except EmailIsExist:
+            return Response("access is denied " ,status = 405)
 
         return Response(ordered_books, status = 200)
 
@@ -74,8 +82,11 @@ class UserBasketView(APIView):
         '''
         try:
             book_service.choose_book(request)
-        except Exception as e:
-            return Response(str(e), status = 500)
+        except NotExist:
+            return Response("Not have such book", status = 404)
+        except NotEnought:
+            return Response("Not enought books on storage", status = 403)
+
 
 
         return Response("Books were added to your basket", status = 201)
@@ -88,8 +99,8 @@ class UserBasketView(APIView):
         '''
         try:
             book_service.delete_book(request)
-        except Exception as e:
-            return Response(str(e), status = 500)
+        except EmailIsExist:
+            return Response("error", status = 500)
 
         return Response("Book was delete from your basket", status = 200)
 
@@ -107,8 +118,8 @@ class SearchSimilarBooksView(APIView):
         
         try:
             books = book_service.get_similar_books(request)
-        except Exception as e:
-            return Response(str(e),status = 400)
+        except NotFound:
+            return Response("No book in the storage",status = 404)
 
         return Response( books, status = 200)
 
@@ -121,7 +132,17 @@ class MakeOrderView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        
-        user_order = book_service.sell_user_order(request)
-
+        try:
+            user_order = book_service.sell_user_order(request)
+        except NotFound:
+            return Response("Basket is empty ", status = 404)
         return Response(user_order, status = 200)
+
+
+class BookCoverView(APIView):
+
+    def get(self,request):
+        pass
+
+    def post(self, request):
+        pass

@@ -28,5 +28,7 @@ urlpatterns = [
     path('choose_book/', book_views.UserBasketView.as_view()),     # +    
     path('search/', book_views.SearchSimilarBooksView.as_view()), # +
     path('sell_books/', book_views.MakeOrderView.as_view()), # +
+    path('user_info/', user_views.UserInfoView.as_view()), # +
+    path('user_avatar', user_views.UserAvatarView.as_view()),
 
 ]
