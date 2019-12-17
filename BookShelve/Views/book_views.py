@@ -2,6 +2,7 @@ from BookShelve.Services import book_service
 from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from BookShelve.check_permission import required_permission
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from BookShelve.exceptions import *
 
@@ -30,7 +31,8 @@ class GetSingleBookView(APIView):
     permission_classes = (AllowAny,) 
     def get (self, request ):
         try:
-            book = book_service.get_book(request)
+            book_id = int(request.data['book_id'])
+            book = book_service.get_book(book_id)
         except NotExist:
             return Response("Book does not exist", status = 404)
         except ValueError:
@@ -49,9 +51,12 @@ class AddBookView(APIView):
 
     def post(self, request):
         try:
-            message = book_service.add_book(request)
-        except NotEnought as e:
+            required_permission(request, "BookShelve.add_book")                             ## Check group permission
+            message = book_service.add_book(request.data)
+        except NotEnought :
             return Response("Not enought books in the storage", status = 400)
+        except KeyError as e:
+            return Response("Argument not provide {}".format(str(e)))
 
         return Response(message , status = 201)
 
@@ -68,9 +73,10 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            ordered_books = book_service.get_ordered_books(request)
-        except EmailIsExist:
-            return Response("access is denied " ,status = 405)
+            user_id = required_permission(request, "BookShelve.view_userbasket")
+            ordered_books = book_service.get_ordered_books(user_id)
+        except Empty:
+            return Response("User basket is empty" ,status = 405)
 
         return Response(ordered_books, status = 200)
 
@@ -81,13 +87,14 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            book_service.choose_book(request)
+            user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
+            book_service.choose_book(user_id, request.data)
         except NotExist:
             return Response("Not have such book", status = 404)
         except NotEnought:
             return Response("Not enought books on storage", status = 403)
-
-
+        except KeyError as e :
+            return Response("Arguments not provided or wrong {}".format(str(e)), status = 400)
 
         return Response("Books were added to your basket", status = 201)
 
@@ -98,9 +105,14 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            book_service.delete_book(request)
-        except EmailIsExist:
-            return Response("error", status = 500)
+            user_id = required_permission(request, "BookShelve.delete_userbasket")
+            book_service.delete_book(user_id, int(request.data['book_id']))
+        except KeyError as e :
+            return Response("were not provided  {}".format(str(e)), status = 400)
+        except ValueError:
+            return Response("invalid arguments", status = 400)
+        except NotFound:
+            return Response("User basket is empty or this book is not in user basket", status = 400)
 
         return Response("Book was delete from your basket", status = 200)
 
@@ -117,9 +129,12 @@ class SearchSimilarBooksView(APIView):
     def get(self, request):
         
         try:
-            books = book_service.get_similar_books(request)
+            title = request.data['title']
+            books = book_service.get_similar_books(title)
         except NotFound:
-            return Response("No book in the storage",status = 404)
+            return Response("No book in this request",status = 404)
+        except KeyError as e:
+            return Response("Argument not provide {}".format(str(e)), status = 400)
 
         return Response( books, status = 200)
 
@@ -133,8 +148,9 @@ class MakeOrderView(APIView):
 
     def post(self, request):
         try:
-            user_order = book_service.sell_user_order(request)
-        except NotFound:
+            user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
+            user_order = book_service.sell_user_order(user_id)
+        except Empty:
             return Response("Basket is empty ", status = 404)
         return Response(user_order, status = 200)
 

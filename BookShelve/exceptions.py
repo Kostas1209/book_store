@@ -19,3 +19,6 @@ class NotEnought(Exception):
 
 class NotFound(Exception):
     pass
+
+class Empty(Exception):
+    pass

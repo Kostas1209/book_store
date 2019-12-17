@@ -7,10 +7,10 @@ from BookShelve.exceptions import *
 
 
 
-def add_book(request):
-    serializer = BookSerializer(data = request.data)
+def add_book(data):
+    serializer = BookSerializer(data = data)
     
-    required_permission(request, "BookShelve.add_book")                             ## Check group permission
+    #required_permission(request, "BookShelve.add_book")                             ## Check group permission
 
     if serializer.is_valid(raise_exception = True):
 
@@ -32,9 +32,9 @@ def add_book(request):
         raise SerializerNonValid
 
 
-def get_book(request):
+def get_book(book_id):
     try:
-        book = Book.objects.get(id = request.data['book_id'])
+        book = Book.objects.get(id = book_id)
     except ValueError:
         raise ValueError
     except Exception:
@@ -52,15 +52,15 @@ def get_all_books():
 
 
 # User Basket
-def choose_book(request):
+def choose_book(user_id, data):
 
-     user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
-     serializer_request = BookChangeSerializer(data = request.data,many = False)
+     #user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
+     serializer_request = BookChangeSerializer(data = data,many = False)
      if serializer_request.is_valid(raise_exception = True) :
         try:
             book_info = Book.objects.get(id = serializer_request.data['book_id'])
-        except Exception:
-            raise NotExist
+        except KeyError as e:
+            raise KeyError(str(e))
         if book_info.amount_in_storage < serializer_request.data['amount']:
             raise NotEnought
 
@@ -70,23 +70,29 @@ def choose_book(request):
                                   user_id = user_id, 
                                   amount =  serializer_request.data['amount'] )
 
-def delete_book(request):
-    user_id = required_permission(request, "BookShelve.delete_userbasket")
-
-    ordered_books = UserBasket.objects.filter(user_id = user_id , book_id = int(request.data ['book_id']))
+def delete_book(user_id, book_id):
+    #user_id = required_permission(request, "BookShelve.delete_userbasket")
+    #try:
+    ordered_books = UserBasket.objects.filter(user_id = int(user_id) , book_id = int(book_id))
+    if len(ordered_books) == 0:
+        raise NotFound
+    #except KeyError as e:
+    #    raise KeyError(str(e))
     summary_amount = 0
     for item in ordered_books:
         summary_amount += item.amount
 
-    Book.objects.filter(id = int(request.data ['book_id']))\
+    Book.objects.filter(id = int(book_id))\
                 .update(amount_in_storage = F('amount_in_storage') + summary_amount )
-    UserBasket.objects.filter(user_id = user_id , book_id = int(request.data ['book_id']) ).delete()
+    UserBasket.objects.filter(user_id = int(user_id) , book_id = int(book_id) ).delete()
     return 
 
-def get_ordered_books(request):
-    user_id = required_permission(request, "BookShelve.view_userbasket")
+def get_ordered_books(user_id):
+    #user_id = required_permission(request, "BookShelve.view_userbasket")
 
-    ordered_book = UserBasket.objects.filter(user_id = user_id )
+    ordered_book = UserBasket.objects.filter(user_id = int(user_id) )
+    if len(ordered_book) == 0:
+        raise Empty
     user_books = {}
 
     for item in ordered_book:
@@ -101,18 +107,18 @@ def get_ordered_books(request):
 
 
 # Search
-def get_similar_books(request):
+def get_similar_books(title):
 
-    books = Book.objects.filter(title__icontains= str(request.data['title']))
+    books = Book.objects.filter(title__icontains = str(title))
     if len(books) == 0:
         raise NotFound
     serializer = BookSerializer(books, many = True)
     return serializer.data
 
 # 
-def sell_user_order(request):
+def sell_user_order(user_id, ):
 
-    user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
+    #user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
 
     ordered_books = UserBasket.objects.filter(user_id = user_id)
 
@@ -127,7 +133,7 @@ def sell_user_order(request):
 
     UserBasket.objects.filter(user_id = user_id).delete()
     if not user_order:
-        raise NotFound
+        raise Empty
 
     return user_order 
 

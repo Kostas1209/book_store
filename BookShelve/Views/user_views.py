@@ -8,7 +8,10 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from pymemcache.client import base
 from BookShelve.serializer import CustomTokenObtainPairSerializer
 from BookShelve.exceptions import *
-from BookShelve.token_service import *
+from BookShelve.Services import token_service
+from BookShelve.check_permission import required_permission, check_group_permission
+
+
 
 class RegistrUserView(APIView):
      '''
@@ -21,7 +24,8 @@ class RegistrUserView(APIView):
 
      def post (self, request):
          try:
-            user_service.register_user(request)
+            data = request.data
+            user_service.register_user(data)
          except EmailIsExist:
              return Response("Email is already exist", status = 406)
          except UsernameIsExist:
@@ -52,32 +56,54 @@ class LoginView( jwt_views.TokenObtainPairView):
 
         print(serializer.validated_data)
         user_service.save_refresh_token_in_cache(serializer.validated_data) # save refresh_token in server 
+
         return Response(serializer.validated_data, status = 200)     # send both tokens to client
 
 
-    #Template!!!
+class LogoutView(APIView):
+    '''
+        logout user
+        required none
+        for authenticated users
+    '''
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+
+        info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        token_service.delete_refresh_token(info['user_id'])
+        print ('test')
+        return Response("Success", status = 200)
+        # delete tokens in client
+
+
 class RefreshAccessTokenView(jwt_views.TokenRefreshView): 
 
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
+        if not 'HTTP_AUTHORIZATION' in request.META:
+            return Response("Access token not provided", status = 401)
+
         info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
         server_refresh = token_service.GetRefreshToken( info['user_id'] )
-        if request.data['refresh'] == server_refresh:
-            serializer = self.get_serializer(data=request.data)
+        #print(server_refresh.decode())
+        #print(str(request.data['refresh']))
+        if server_refresh is not None  and \
+           str(request.data['refresh']) == server_refresh.decode():
 
+            serializer = self.get_serializer(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
             except TokenError as e:
                 raise InvalidToken(e.args[0])
-            print(serializer.validated_data)
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            #print(serializer.validated_data)
+            return Response(serializer.validated_data, status=200)
 
         else: 
-            token_service.delete_refresh_token(info['user_id'])
-            #Redirect to login
-
-
+            token_service.delete_refresh_token(info['user_id']) 
+            return Response("You should login again",status = 404)
+            
 
 
 class UserInfoView(APIView):
@@ -89,8 +115,8 @@ class UserInfoView(APIView):
         required none
         for client
         '''
-
-        user_info = user_service.get_user_info(request)
+        user_id = required_permission(request, "auth.view_user")
+        user_info = user_service.get_user_info(user_id)
         return Response(user_info,status = 200)
 
     def put(self, request):
@@ -101,7 +127,9 @@ class UserInfoView(APIView):
         '''
 
         try:
-            user_service.change_user_info(request)
+            data = request.data
+            user_id = required_permission(request, "auth.change_user")
+            user_service.change_user_info(data,user_id)
         except UsernameIsExist:
             return Response("Username is already exist",status = 406)
         except NothingToBeDone:
@@ -115,11 +143,13 @@ class UserAvatarView(APIView):
     permission_classes = (IsAuthenticated,) 
 
     def get(self,request):
-        text = user_service.get_user_avatar(request)
+        user_id = required_permission(request,"BookShelve.view_useravatar")
+        text = user_service.get_user_avatar(user_id)
         return Response(text,status = 200)
 
     def post(self,request):
-        user_service.set_user_avatar(request)
+        user_id = required_permission(request,"BookShelve.change_useravatar")
+        user_service.set_user_avatar(user,str(request['text_image']))
         return Response("Avatar are saved", status = 200)
 
 

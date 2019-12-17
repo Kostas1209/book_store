@@ -23,4 +23,5 @@ def GetRefreshToken(user_id):
 
 def delete_refresh_token(user_id):
     client = base.Client(('localhost', 11211))
-    delete user_id
+    client.delete(user_id)
+

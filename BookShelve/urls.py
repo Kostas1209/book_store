@@ -25,10 +25,11 @@ urlpatterns = [
     path('registr/', user_views.RegistrUserView.as_view() ), # +
     path('login/', user_views.LoginView.as_view()), # +
     path('login/refresh/',user_views.RefreshAccessTokenView.as_view() ),
-    path('choose_book/', book_views.UserBasketView.as_view()),     # +    
+    path('user_basket/', book_views.UserBasketView.as_view()),     # +    
     path('search/', book_views.SearchSimilarBooksView.as_view()), # +
     path('sell_books/', book_views.MakeOrderView.as_view()), # +
     path('user_info/', user_views.UserInfoView.as_view()), # +
-    path('user_avatar', user_views.UserAvatarView.as_view()),
+    path('user_avatar/', user_views.UserAvatarView.as_view()),
+    path('logout/', user_views.LogoutView.as_view()),
 
 ]
