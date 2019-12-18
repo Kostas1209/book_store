@@ -20,19 +20,25 @@ def required_permission(request, permission : str) -> int:
 
 
 
-def check_group_permission(request, permission : str):
-    info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1] )
-    #print(info)
-    user = User.objects.get(id = info['user_id'])
-    #print(user.get_group_permissions())
-    #print(user.has_perm(permission))
-    if user.has_perm(permission) == False:
-        raise PermissionDenied
+def check_group_permission(permission : str):
+    '''
+    Check group permissions and  raise exception PermissionDenied
+    requere  permission string
+    should decorate view methods(get, post ...)
+    '''
+    def Decorator(func):
+        def decorator(self,request):
+            info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1] )
+            #print(info)
+            user = User.objects.get(id = info['user_id'])
+            #print(user.get_group_permissions())
+            #print(user.has_perm(permission))
+            if user.has_perm(permission) == False:
+                raise PermissionDenied
 
-    def decorator(self,func):
+            response = func(self, request)
+            return response
 
-        func(self, request)
-        
-
-    return decorator
+        return decorator
+    return Decorator
 

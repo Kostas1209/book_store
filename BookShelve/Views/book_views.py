@@ -2,9 +2,11 @@ from BookShelve.Services import book_service
 from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from BookShelve.check_permission import required_permission
+from BookShelve.check_permission import required_permission,check_group_permission
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from BookShelve.exceptions import *
+from BookShelve.Services import token_service
+from django.core.exceptions import ObjectDoesNotExist
 
 class BooksView(APIView): 
     '''
@@ -29,6 +31,7 @@ class GetSingleBookView(APIView):
         for all users 
         '''
     permission_classes = (AllowAny,) 
+
     def get (self, request ):
         try:
             book_id = int(request.data['book_id'])
@@ -37,6 +40,8 @@ class GetSingleBookView(APIView):
             return Response("Book does not exist", status = 404)
         except ValueError:
             return Response("wrong format of input data", status = 400)
+        except KeyError as e:
+            return Response("argument not provided {}".format(str(e)), status = 400)
         return Response(  book , status = 200 )
 
  
@@ -49,9 +54,10 @@ class AddBookView(APIView):
 
     permission_classes = (IsAuthenticated,)
 
+    @check_group_permission("BookShelve.add_book")
     def post(self, request):
         try:
-            required_permission(request, "BookShelve.add_book")                             ## Check group permission
+            #required_permission(request, "BookShelve.add_book")                             ## Check group permission
             message = book_service.add_book(request.data)
         except NotEnought :
             return Response("Not enought books in the storage", status = 400)
@@ -66,6 +72,7 @@ class UserBasketView(APIView):
 
      permission_classes = (IsAuthenticated,)
 
+     @check_group_permission("BookShelve.view_userbasket")
      def get(self, request):
         '''
         get books from user basket
@@ -73,13 +80,15 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            user_id = required_permission(request, "BookShelve.view_userbasket")
-            ordered_books = book_service.get_ordered_books(user_id)
+            #user_id = required_permission(request, "BookShelve.view_userbasket")
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            ordered_books = book_service.get_ordered_books(token_info['user_id'])
         except Empty:
             return Response("User basket is empty" ,status = 405)
 
         return Response(ordered_books, status = 200)
 
+     @check_group_permission("BookShelve.add_userbasket")
      def post(self, request):
         '''
         add book to user basket
@@ -87,9 +96,10 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
-            book_service.choose_book(user_id, request.data)
-        except NotExist:
+            #user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            book_service.choose_book(token_info['user_id'], request.data)
+        except ObjectDoesNotExist:
             return Response("Not have such book", status = 404)
         except NotEnought:
             return Response("Not enought books on storage", status = 403)
@@ -97,7 +107,8 @@ class UserBasketView(APIView):
             return Response("Arguments not provided or wrong {}".format(str(e)), status = 400)
 
         return Response("Books were added to your basket", status = 201)
-
+     
+     @check_group_permission("BookShelve.delete_userbasket")
      def delete(self, request):
         '''
         delete book from your basket
@@ -105,8 +116,9 @@ class UserBasketView(APIView):
         for clients
         '''
         try:
-            user_id = required_permission(request, "BookShelve.delete_userbasket")
-            book_service.delete_book(user_id, int(request.data['book_id']))
+            #user_id = required_permission(request, "BookShelve.delete_userbasket")
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            book_service.delete_book(token_info['user_id'], int(request.data['book_id']))
         except KeyError as e :
             return Response("were not provided  {}".format(str(e)), status = 400)
         except ValueError:
@@ -146,10 +158,12 @@ class MakeOrderView(APIView):
     '''
     permission_classes = (IsAuthenticated,)
 
+    @check_group_permission("BookShelve.change_userbasket")
     def post(self, request):
         try:
-            user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
-            user_order = book_service.sell_user_order(user_id)
+            # user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            user_order = book_service.sell_user_order(token_info['user_id'])
         except Empty:
             return Response("Basket is empty ", status = 404)
         return Response(user_order, status = 200)

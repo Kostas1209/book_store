@@ -72,7 +72,6 @@ class LogoutView(APIView):
 
         info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
         token_service.delete_refresh_token(info['user_id'])
-        print ('test')
         return Response("Success", status = 200)
         # delete tokens in client
 
@@ -109,16 +108,19 @@ class RefreshAccessTokenView(jwt_views.TokenRefreshView):
 class UserInfoView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @check_group_permission("auth.view_user")
     def get(self,request):
         '''
         get user info 
         required none
         for client
         '''
-        user_id = required_permission(request, "auth.view_user")
-        user_info = user_service.get_user_info(user_id)
+        #user_id = required_permission(request, "auth.view_user")
+        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        user_info = user_service.get_user_info(token_info['user_id'])
         return Response(user_info,status = 200)
 
+    @check_group_permission("auth.change_user")
     def put(self, request):
         '''
         Change user info if its transferred
@@ -128,8 +130,9 @@ class UserInfoView(APIView):
 
         try:
             data = request.data
-            user_id = required_permission(request, "auth.change_user")
-            user_service.change_user_info(data,user_id)
+            #user_id = required_permission(request, "auth.change_user")
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            user_service.change_user_info(data,token_info['user_id'])
         except UsernameIsExist:
             return Response("Username is already exist",status = 406)
         except NothingToBeDone:
@@ -142,14 +145,18 @@ class UserAvatarView(APIView):
 
     permission_classes = (IsAuthenticated,) 
 
+    @check_group_permission("BookShelve.view_useravatar")
     def get(self,request):
-        user_id = required_permission(request,"BookShelve.view_useravatar")
-        text = user_service.get_user_avatar(user_id)
+        #user_id = required_permission(request,"BookShelve.view_useravatar")
+        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        text = user_service.get_user_avatar(toke_info['user_id'])
         return Response(text,status = 200)
 
+    @check_group_permission("BookShelve.change_useravatar")
     def post(self,request):
-        user_id = required_permission(request,"BookShelve.change_useravatar")
-        user_service.set_user_avatar(user,str(request['text_image']))
+        #user_id = required_permission(request,"BookShelve.change_useravatar")
+        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        user_service.set_user_avatar(token_info['user_id'],str(request['text_image']))
         return Response("Avatar are saved", status = 200)
 
 
