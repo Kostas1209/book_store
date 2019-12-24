@@ -1,0 +1,9 @@
+Django==3.0
+djangorestframework==3.11.0
+djangorestframework-simplejwt==4.4.0
+mysqlclient==1.4.6
+sqlparse==0.3.0
+django-appconf==1.0.3
+pymemcache==2.2.2
+PyYAML==5.1.2
+ddtrace==0.31.0

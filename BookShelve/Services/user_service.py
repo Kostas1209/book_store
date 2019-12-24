@@ -6,6 +6,7 @@ from BookShelve.serializer import  UserSerializer
 from BookShelve.exceptions import *
 from BookShelve.check_permission import required_permission, check_group_permission
 from BookShelve.models import UserAvatar
+from ddtrace import patch
 
 def get_user_info(user_id):
     #user_id = required_permission(request, "auth.view_user")
@@ -70,8 +71,8 @@ def register_user(data):
 
 
 def save_refresh_token_in_cache(data):
-
-    refresh_token = base.Client(("localhost",11211))
+    #patch(pymemcache=True)
+    refresh_token = base.Client(("0.0.0.0",11211))
     info = token_service.DecodeToken(data['access'])
     refresh_token.set(info['user_id'], data['refresh'], expire = 60 * 60 * 24)
 
