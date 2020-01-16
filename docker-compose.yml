@@ -2,10 +2,9 @@ version: '3'
 
 services:
   cache:
-    image: memcached
+    image: memcached:alpine
     ports:
-      - "11211:11211"
-    restart: always
+      - 11211:11211
   db:
     image: mysql:5.7
     environment:

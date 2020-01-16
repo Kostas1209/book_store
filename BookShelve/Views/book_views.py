@@ -22,19 +22,20 @@ class BooksView(APIView):
             books = book_service.get_all_books()
         except NotExist:
             return Response("Have not at now",status = 404)
-        return Response(  books , status = 200 )
+        return Response( {"books" : books} , status = 200 )
 
 
 class GetSingleBookView(APIView): 
     ''' Get single book
-        required book_id
+        required parametr book_id
         for all users 
         '''
     permission_classes = (AllowAny,) 
 
-    def get (self, request ):
+    def get(self, request ):
         try:
-            book_id = int(request.data['book_id'])
+            book_id = int(request.GET.get("id","not receive argument"))
+            print(book_id)
             book = book_service.get_book(book_id)
         except NotExist:
             return Response("Book does not exist", status = 404)
@@ -42,7 +43,7 @@ class GetSingleBookView(APIView):
             return Response("wrong format of input data", status = 400)
         except KeyError as e:
             return Response("argument not provided {}".format(str(e)), status = 400)
-        return Response(  book , status = 200 )
+        return Response({"book": book} , status = 200 )
 
  
 class AddBookView(APIView):
@@ -62,7 +63,7 @@ class AddBookView(APIView):
         except NotEnought :
             return Response("Not enought books in the storage", status = 400)
         except KeyError as e:
-            return Response("Argument not provide {}".format(str(e)))
+            return Response("Argument not provide {}".format(str(e)),status = 400)
 
         return Response(message , status = 201)
 
@@ -86,7 +87,7 @@ class UserBasketView(APIView):
         except Empty:
             return Response("User basket is empty" ,status = 405)
 
-        return Response(ordered_books, status = 200)
+        return Response({"books":ordered_books} , status = 200)
 
      @check_group_permission("BookShelve.add_userbasket")
      def post(self, request):
@@ -138,17 +139,17 @@ class SearchSimilarBooksView(APIView):
 
     permission_classes = (AllowAny,)
 
-    def get(self, request):
+    def post(self, request):
         
         try:
-            title = request.data['title']
+            title = request.data["title"]
             books = book_service.get_similar_books(title)
         except NotFound:
             return Response("No book in this request",status = 404)
         except KeyError as e:
             return Response("Argument not provide {}".format(str(e)), status = 400)
 
-        return Response( books, status = 200)
+        return Response( {"books" : books}, status = 200)
 
 
 class MakeOrderView(APIView):
@@ -161,9 +162,10 @@ class MakeOrderView(APIView):
     @check_group_permission("BookShelve.change_userbasket")
     def post(self, request):
         try:
+            print(request.data)
             # user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
-            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-            user_order = book_service.sell_user_order(token_info['user_id'])
+            #token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            #user_order = book_service.sell_user_order(token_info['user_id'])
         except Empty:
             return Response("Basket is empty ", status = 404)
         return Response(user_order, status = 200)

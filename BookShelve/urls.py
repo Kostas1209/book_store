@@ -20,16 +20,16 @@ from .Views import book_views, user_views
 
 urlpatterns = [
     path('book_catalog/', book_views.BooksView.as_view() ), # +
-    path('single_book/', book_views.GetSingleBookView.as_view() ), # + 
-    path('add_book/', book_views.AddBookView.as_view() ), # +
+    path('single_book/', book_views.GetSingleBookView.as_view() ),  #+
+    path('add_book/', book_views.AddBookView.as_view() ), 
     path('registr/', user_views.RegistrUserView.as_view() ), # +
     path('login/', user_views.LoginView.as_view()), # +
-    path('login/refresh/',user_views.RefreshAccessTokenView.as_view() ),
-    path('user_basket/', book_views.UserBasketView.as_view()),     # +    
+    path('refresh/',user_views.RefreshAccessTokenView.as_view() ), # ?
+    path('user_basket/', book_views.UserBasketView.as_view()),   # delete    
     path('search/', book_views.SearchSimilarBooksView.as_view()), # +
     path('sell_books/', book_views.MakeOrderView.as_view()), # +
     path('user_info/', user_views.UserInfoView.as_view()), # +
-    path('user_avatar/', user_views.UserAvatarView.as_view()),
-    path('logout/', user_views.LogoutView.as_view()),
+    path('user_avatar/', user_views.UserAvatarView.as_view()), # That is a problem
+    path('logout/', user_views.LogoutView.as_view()), # + need to make autorefresh
 
 ]

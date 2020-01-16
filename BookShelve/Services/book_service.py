@@ -1,5 +1,5 @@
 from BookShelve.models import Book, UserBasket
-from BookShelve.serializer import  (BookSerializer, BookChangeSerializer, )
+from BookShelve.serializer import  (BookSerializer, BookChangeSerializer, BookSerializerWithId )
 from BookShelve.Services import token_service
 from django.db.models import F
 from BookShelve.check_permission import required_permission
@@ -39,7 +39,7 @@ def get_book(book_id):
         raise ValueError
     except Exception:
         raise NotExist
-    serializer = BookSerializer(book,many = False)
+    serializer = BookSerializerWithId(book,many = False)
     return serializer.data
 
 def get_all_books():
@@ -47,7 +47,7 @@ def get_all_books():
     books = Book.objects.all()
     if len(books) == 0:
         raise NotExist
-    serializer = BookSerializer(books, many = True)
+    serializer = BookSerializerWithId(books, many = True)
     return serializer.data
 
 

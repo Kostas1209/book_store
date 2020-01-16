@@ -36,8 +36,8 @@ DEBUG = bool(os.getenv("DEBUG",True))
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('ACCESS_TOKEN_LIFETIME', 5))),   
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('REFRESH_TOKEN_LIFETIME', 1))),
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=int(os.getenv('ACCESS_TOKEN_LIFETIME', 5))),   
+    'REFRESH_TOKEN_LIFETIME': timedelta(seconds=int(os.getenv('REFRESH_TOKEN_LIFETIME', 1))),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 
@@ -57,8 +57,8 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('SLIDING_TOKEN_LIFETIME',5))),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=int(os.getenv('SLIDING_TOKEN_REFRESH_LIFETIME',1))),
+    'SLIDING_TOKEN_LIFETIME': timedelta(seconds=int(os.getenv('SLIDING_TOKEN_LIFETIME',5))),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(seconds=int(os.getenv('SLIDING_TOKEN_REFRESH_LIFETIME',1))),
 }
 
 
@@ -72,10 +72,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'BookShelve'
+    'BookShelve',
+    'corsheaders'
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,6 +156,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CACHES = {
+    'default' : {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'localhost:11211'
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

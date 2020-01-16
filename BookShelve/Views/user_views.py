@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from BookShelve.Services import user_service
 from rest_framework_simplejwt import views as jwt_views
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from pymemcache.client import base
 from BookShelve.serializer import CustomTokenObtainPairSerializer
 from BookShelve.exceptions import *
 from BookShelve.Services import token_service
@@ -81,25 +80,25 @@ class RefreshAccessTokenView(jwt_views.TokenRefreshView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        if not 'HTTP_AUTHORIZATION' in request.META:
-            return Response("Access token not provided", status = 401)
 
-        info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        info = token_service.DecodeToken(str(request.data['access']))
         server_refresh = token_service.GetRefreshToken( info['user_id'] )
-        #print(server_refresh.decode())
+        #print(server_refresh)
         #print(str(request.data['refresh']))
         if server_refresh is not None  and \
-           str(request.data['refresh']) == server_refresh.decode():
+           str(request.data['refresh']) == server_refresh:
 
             serializer = self.get_serializer(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
             except TokenError as e:
                 raise InvalidToken(e.args[0])
-            #print(serializer.validated_data)
+            print(serializer.validated_data)
             return Response(serializer.validated_data, status=200)
 
         else: 
+            if server_refresh is None:
+                return Response("Not registr",status = 404)
             token_service.delete_refresh_token(info['user_id']) 
             return Response("You should login again",status = 404)
             
