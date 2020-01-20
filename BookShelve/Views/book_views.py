@@ -162,13 +162,13 @@ class MakeOrderView(APIView):
     @check_group_permission("BookShelve.change_userbasket")
     def post(self, request):
         try:
-            print(request.data)
             # user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
             #token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
             #user_order = book_service.sell_user_order(token_info['user_id'])
+            book_service.sell_user_order(request.data['books'])
         except Empty:
             return Response("Basket is empty ", status = 404)
-        return Response(user_order, status = 200)
+        return Response("success", status = 200)
 
 
 class BookCoverView(APIView):

@@ -148,14 +148,14 @@ class UserAvatarView(APIView):
     def get(self,request):
         #user_id = required_permission(request,"BookShelve.view_useravatar")
         token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-        text = user_service.get_user_avatar(toke_info['user_id'])
+        text = user_service.get_user_avatar(token_info['user_id'])
         return Response(text,status = 200)
 
     @check_group_permission("BookShelve.change_useravatar")
     def post(self,request):
         #user_id = required_permission(request,"BookShelve.change_useravatar")
         token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-        user_service.set_user_avatar(token_info['user_id'],str(request['text_image']))
+        user_service.set_user_avatar(token_info['user_id'],str(request.data['image']))
         return Response("Avatar are saved", status = 200)
 
 

@@ -6,6 +6,10 @@ from BookShelve.serializer import  UserSerializer
 from BookShelve.exceptions import *
 from BookShelve.check_permission import required_permission, check_group_permission
 from BookShelve.models import UserAvatar
+import base64
+from PIL import Image
+from io import BytesIO
+import re   
 
 def get_user_info(user_id):
     #user_id = required_permission(request, "auth.view_user")
@@ -93,22 +97,31 @@ def check_unique_user_info(username = None , email = None):
 
 def get_user_avatar(user_id):
     #user_id = required_permission(request,"BookShelve.view_useravatar")
-    text = UserAvatar.objects.get(id = user_id)
-    
-    return text
+    text = UserAvatar.objects.get(user_id = user_id)
+    return text.user_avatar
 
 def set_user_avatar(user_id, text_image):
-    #user_id = required_permission(request,"BookShelve.change_useravatar")
-    # testing
+    SIZE = (200,120)
 
+    image_data = re.sub('^data:image/.+;base64,', '', text_image)
+    image = Image.open(BytesIO(base64.b64decode(image_data)))
+    image.thumbnail(SIZE,Image.ANTIALIAS) # resize image
+    #image.show()
 
 
     #testing
+    buffered = BytesIO()
+    image.save(buffered, quality=20,optimize=True)
+    img_str = base64.b64encode(buffered.getvalue()) 
+    if len(UserAvatar.objects.filter(user_id = user_id)) > 0:
+        UserAvatar.objects.filter(user_id=user_id).update(user_avatar = img_str.decode("utf-8"))
 
-    avatar = UserAvatar.objects.get(id = user_id)
-    avatar.user_avatar = str(text_image)
-    avatar.save()
+    else:       	
+        UserAvatar.objects.create(user_id = user_id, user_avatar = img_str.decode("utf-8"))
 
+    #avatar = UserAvatar.objects.get(user_id = user_id)
+    #avatar.user_avatar = str(text_image)
+    #avatar.save()
     return 
 
 

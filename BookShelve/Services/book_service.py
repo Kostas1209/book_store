@@ -116,24 +116,16 @@ def get_similar_books(title):
     return serializer.data
 
 # 
-def sell_user_order(user_id, ):
+def sell_user_order(user_books ):
 
     #user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
 
-    ordered_books = UserBasket.objects.filter(user_id = user_id)
-
-    user_order = {}
-    for item in ordered_books:
-        book = Book.objects.get(id = item.book_id)
-        if book.title in user_order:
-            user_order[book.title] += item.amount
-
-        else:
-            user_order[book.title] = item.amount
-
-    UserBasket.objects.filter(user_id = user_id).delete()
-    if not user_order:
+   
+    for item in user_books:
+        Book.objects.filter(id = int(item['id']))\
+                .update(amount_in_storage = F('amount_in_storage') - int(item['amount']) )
+    if not user_books:
         raise Empty
 
-    return user_order 
+    return 
 
