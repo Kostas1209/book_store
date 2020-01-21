@@ -22,3 +22,6 @@ class NotFound(Exception):
 
 class Empty(Exception):
     pass
+
+class FileSize(Exception):
+    pass

@@ -1,5 +1,6 @@
 import os
 import memcache
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from BookShelve.Services import token_service
 from BookShelve.serializer import  UserSerializer
@@ -10,6 +11,9 @@ import base64
 from PIL import Image
 from io import BytesIO
 import re   
+
+
+MAX_FILE_SIZE = 1048576  # 1MB
 
 def get_user_info(user_id):
     #user_id = required_permission(request, "auth.view_user")
@@ -97,7 +101,10 @@ def check_unique_user_info(username = None , email = None):
 
 def get_user_avatar(user_id):
     #user_id = required_permission(request,"BookShelve.view_useravatar")
-    text = UserAvatar.objects.get(user_id = user_id)
+    try:
+        text = UserAvatar.objects.get(user_id = user_id)
+    except ObjectDoesNotExist:
+        raise ObjectDoesNotExist
     return text.user_avatar
 
 def set_user_avatar(user_id, text_image):
@@ -105,13 +112,16 @@ def set_user_avatar(user_id, text_image):
 
     image_data = re.sub('^data:image/.+;base64,', '', text_image)
     image = Image.open(BytesIO(base64.b64decode(image_data)))
+    if len(image.fp.read()) >= MAX_FILE_SIZE:
+        raise FileSize
     image.thumbnail(SIZE,Image.ANTIALIAS) # resize image
+    image = image.convert('RGB')
     #image.show()
 
 
     #testing
     buffered = BytesIO()
-    image.save(buffered, quality=20,optimize=True)
+    image.save(buffered, format = "PNG", quality=70,optimize=True)
     img_str = base64.b64encode(buffered.getvalue()) 
     if len(UserAvatar.objects.filter(user_id = user_id)) > 0:
         UserAvatar.objects.filter(user_id=user_id).update(user_avatar = img_str.decode("utf-8"))

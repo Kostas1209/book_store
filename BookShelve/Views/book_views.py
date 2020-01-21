@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from BookShelve.exceptions import *
 from BookShelve.Services import token_service
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.utils import OperationalError
 
 class BooksView(APIView): 
     '''
@@ -148,7 +149,8 @@ class SearchSimilarBooksView(APIView):
             return Response("No book in this request",status = 404)
         except KeyError as e:
             return Response("Argument not provide {}".format(str(e)), status = 400)
-
+        except OperationalError:
+            return Response("Not supporting language", status = 400)
         return Response( {"books" : books}, status = 200)
 
 
@@ -168,6 +170,8 @@ class MakeOrderView(APIView):
             book_service.sell_user_order(request.data['books'])
         except Empty:
             return Response("Basket is empty ", status = 404)
+        except NotEnought:
+            return Response("Not have such books", status = 400)
         return Response("success", status = 200)
 
 

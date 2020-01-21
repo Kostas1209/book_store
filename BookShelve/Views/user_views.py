@@ -9,6 +9,7 @@ from BookShelve.serializer import CustomTokenObtainPairSerializer
 from BookShelve.exceptions import *
 from BookShelve.Services import token_service
 from BookShelve.check_permission import required_permission, check_group_permission
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -98,9 +99,9 @@ class RefreshAccessTokenView(jwt_views.TokenRefreshView):
 
         else: 
             if server_refresh is None:
-                return Response("Not registr",status = 404)
+                return Response("Not registr",status = 401)
             token_service.delete_refresh_token(info['user_id']) 
-            return Response("You should login again",status = 404)
+            return Response("You should login again",status = 401)
             
 
 
@@ -146,16 +147,22 @@ class UserAvatarView(APIView):
 
     @check_group_permission("BookShelve.view_useravatar")
     def get(self,request):
-        #user_id = required_permission(request,"BookShelve.view_useravatar")
-        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-        text = user_service.get_user_avatar(token_info['user_id'])
+        try:
+            #user_id = required_permission(request,"BookShelve.view_useravatar")
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            text = user_service.get_user_avatar(token_info['user_id'])
+        except ObjectDoesNotExist:
+            return Response("Does nor exist", status = 400)
         return Response(text,status = 200)
 
     @check_group_permission("BookShelve.change_useravatar")
     def post(self,request):
         #user_id = required_permission(request,"BookShelve.change_useravatar")
-        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-        user_service.set_user_avatar(token_info['user_id'],str(request.data['image']))
+        try:
+            token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+            user_service.set_user_avatar(token_info['user_id'],str(request.data['image']))
+        except FileSize:
+            return Response("File is big", status = 406)
         return Response("Avatar are saved", status = 200)
 
 

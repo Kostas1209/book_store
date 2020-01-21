@@ -119,8 +119,14 @@ def get_similar_books(title):
 def sell_user_order(user_books ):
 
     #user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
+    for item in user_books:
+        book = Book.objects.filter(id = int(item['id']))
+        serializer = BookSerializer(data = book, many = False)
+        if serializer.is_valid():
+            print(serializer.data)
+            if book['amount_in_storage'] < int(item['amount']) :
+                raise NotEnought
 
-   
     for item in user_books:
         Book.objects.filter(id = int(item['id']))\
                 .update(amount_in_storage = F('amount_in_storage') - int(item['amount']) )
