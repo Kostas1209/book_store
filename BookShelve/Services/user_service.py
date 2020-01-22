@@ -8,7 +8,7 @@ from BookShelve.exceptions import *
 from BookShelve.check_permission import required_permission, check_group_permission
 from BookShelve.models import UserAvatar
 import base64
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 import re   
 
@@ -111,7 +111,11 @@ def set_user_avatar(user_id, text_image):
     SIZE = (200,120)
 
     image_data = re.sub('^data:image/.+;base64,', '', text_image)
-    image = Image.open(BytesIO(base64.b64decode(image_data)))
+    try:
+        image = Image.open(BytesIO(base64.b64decode(image_data)))
+    except UnidentifiedImageError:
+        raise UnidentifiedImageError
+
     if len(image.fp.read()) >= MAX_FILE_SIZE:
         raise FileSize
     image.thumbnail(SIZE,Image.ANTIALIAS) # resize image

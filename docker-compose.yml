@@ -14,6 +14,10 @@ services:
       MYSQL_ROOT_PASSWORD: '1234567890'
     ports:
      - '3306:3306'
+  front:
+    build: C:\Users\Anuitex-81\Desktop\book-store-frontend
+    ports:
+      - 4000:4000
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -24,4 +28,5 @@ services:
     depends_on:
       - db
       - cache
+
   

@@ -10,6 +10,7 @@ from BookShelve.exceptions import *
 from BookShelve.Services import token_service
 from BookShelve.check_permission import required_permission, check_group_permission
 from django.core.exceptions import ObjectDoesNotExist
+from PIL import UnidentifiedImageError
 
 
 
@@ -163,6 +164,8 @@ class UserAvatarView(APIView):
             user_service.set_user_avatar(token_info['user_id'],str(request.data['image']))
         except FileSize:
             return Response("File is big", status = 406)
+        except UnidentifiedImageError:
+            return Response("File not supporting", status = 415)
         return Response("Avatar are saved", status = 200)
 
 
