@@ -115,6 +115,8 @@ def set_user_avatar(user_id, text_image):
         image = Image.open(BytesIO(base64.b64decode(image_data)))
     except UnidentifiedImageError:
         raise UnidentifiedImageError
+    except Exception:
+        raise Exception
 
     if len(image.fp.read()) >= MAX_FILE_SIZE:
         raise FileSize

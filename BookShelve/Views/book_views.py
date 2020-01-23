@@ -36,7 +36,6 @@ class GetSingleBookView(APIView):
     def get(self, request ):
         try:
             book_id = int(request.GET.get("id","not receive argument"))
-            print(book_id)
             book = book_service.get_book(book_id)
         except NotExist:
             return Response("Book does not exist", status = 404)

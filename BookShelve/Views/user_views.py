@@ -166,6 +166,8 @@ class UserAvatarView(APIView):
             return Response("File is big", status = 406)
         except UnidentifiedImageError:
             return Response("File not supporting", status = 415)
+        except Exception:
+            return Response("Bad request",status=400)
         return Response("Avatar are saved", status = 200)
 
 

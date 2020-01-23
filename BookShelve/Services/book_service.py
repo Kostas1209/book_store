@@ -4,7 +4,7 @@ from BookShelve.Services import token_service
 from django.db.models import F
 from BookShelve.check_permission import required_permission
 from BookShelve.exceptions import *
-
+import BookShelve.Services.cache_service as cache
 
 
 def add_book(data):
@@ -33,6 +33,12 @@ def add_book(data):
 
 
 def get_book(book_id):
+
+    CACHE_DATA_NAME = "book_{}".format(book_id)
+
+    if cache.is_in_cache(CACHE_DATA_NAME):
+        return cache.get_from_cache(CACHE_DATA_NAME)
+
     try:
         book = Book.objects.get(id = book_id)
     except ValueError:
@@ -40,14 +46,25 @@ def get_book(book_id):
     except Exception:
         raise NotExist
     serializer = BookSerializerWithId(book,many = False)
+    cache.save_to_cache(CACHE_DATA_NAME,serializer.data)
+    print("Get from database")
+
     return serializer.data
 
 def get_all_books():
+    
+    CACHE_DATA_NAME = "books"
 
+    if cache.is_in_cache(CACHE_DATA_NAME):
+        return cache.get_from_cache(CACHE_DATA_NAME)
+    
     books = Book.objects.all()
     if len(books) == 0:
         raise NotExist
     serializer = BookSerializerWithId(books, many = True)
+    cache.save_to_cache(CACHE_DATA_NAME,serializer.data)
+    print("Get from database")
+
     return serializer.data
 
 
@@ -119,19 +136,19 @@ def get_similar_books(title):
 def sell_user_order(user_books ):
 
     #user_id = required_permission(request, "BookShelve.change_userbasket")             #Check group permission
+    if not user_books:
+        raise Empty
     for item in user_books:
-        book = Book.objects.filter(id = int(item['id']))
-        serializer = BookSerializer(data = book, many = False)
-        if serializer.is_valid():
-            print(serializer.data)
-            if book['amount_in_storage'] < int(item['amount']) :
-                raise NotEnought
+        book = Book.objects.get(id = int(item['id']))
+        if book.amount_in_storage < int(item['amount']) :
+            raise NotEnought
 
     for item in user_books:
         Book.objects.filter(id = int(item['id']))\
                 .update(amount_in_storage = F('amount_in_storage') - int(item['amount']) )
-    if not user_books:
-        raise Empty
+        cache.delete_from_cache("book_{}".format(item['id']))   #delete  cache info about buy books
+
+    cache.delete_from_cache("books") #delete cache info about all books 
 
     return 
 
