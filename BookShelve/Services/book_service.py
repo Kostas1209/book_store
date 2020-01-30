@@ -2,9 +2,12 @@ from BookShelve.models import Book, UserBasket
 from BookShelve.serializer import  (BookSerializer, BookChangeSerializer, BookSerializerWithId )
 from BookShelve.Services import token_service
 from django.db.models import F
+from django.core.mail import send_mail
 from BookShelve.check_permission import required_permission
 from BookShelve.exceptions import *
 import BookShelve.Services.cache_service as cache
+from celery import shared_task
+import time
 
 
 def add_book(data):
@@ -69,6 +72,7 @@ def get_all_books():
 
 
 # User Basket
+@shared_task
 def choose_book(user_id, data):
 
      #user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
@@ -148,7 +152,27 @@ def sell_user_order(user_books ):
                 .update(amount_in_storage = F('amount_in_storage') - int(item['amount']) )
         cache.delete_from_cache("book_{}".format(item['id']))   #delete  cache info about buy books
 
+    make_delay(5)
     cache.delete_from_cache("books") #delete cache info about all books 
+
 
     return 
 
+def user_post_save():
+        send_mail(
+            'Verify your QuickPublisher account',
+            'Follow this link to verify your account: '
+                'http://localhost:8000/api/books_catalog',
+            'registrxdvv@gmail.com',
+            ['fig445354545@gmail.com'],
+            fail_silently=False,
+        )
+
+
+@shared_task
+def make_delay(seconds : int ):
+
+    print("Try toconnect...")
+    time.sleep(seconds)
+    print("Sent message")
+ 

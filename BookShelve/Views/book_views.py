@@ -99,7 +99,7 @@ class UserBasketView(APIView):
         try:
             #user_id = required_permission(request, "BookShelve.add_userbasket")                      ## Check group permission
             token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
-            book_service.choose_book(token_info['user_id'], request.data)
+            book_service.choose_book.delay(token_info['user_id'], request.data) # run as task
         except ObjectDoesNotExist:
             return Response("Not have such book", status = 404)
         except NotEnought:

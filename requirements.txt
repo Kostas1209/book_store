@@ -8,3 +8,5 @@ python-memcached==1.59
 PyYAML==5.1.2
 django-cors-headers==3.2.0
 Pillow==7.0.0
+celery==4.4.0
+redis==3.3.11

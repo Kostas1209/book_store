@@ -176,6 +176,22 @@ USE_L10N = True
 
 USE_TZ = True
 
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'registrxdvv@gmail.com'
+EMAIL_HOST_PASSWORD = 'kjnjc2014'
+EMAIL_PORT = 587
+
+CELERY_BROKER_URL = 'redis://redis:'+ REDIS_PORT
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_RESULT_BACKEND = 'redis://redis:' + REDIS_PORT
+CELERY_SEND_EVENTS = 'TRUE'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
