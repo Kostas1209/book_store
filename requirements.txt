@@ -5,7 +5,7 @@ mysqlclient==1.4.6
 sqlparse==0.3.0
 django-appconf==1.0.3
 python-memcached==1.59
-PyYAML==5.1.2
+PyYAML==5.4
 django-cors-headers==3.2.0
 Pillow==7.0.0
 celery==4.4.0
