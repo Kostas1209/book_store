@@ -45,7 +45,7 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ( 'id', 'title', 'amount_in_storage', 'author', 'price' )
+        fields = ( 'id', 'title', 'amount_in_storage', 'price' )
 
 
 class BookChangeSerializer(serializers.ModelSerializer):
@@ -62,11 +62,29 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
+class ResponseBookSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    price = serializers.IntegerField()
+    amount_in_storage = serializers.IntegerField()
+    title = serializers.CharField()
+    author = serializers.ListField()
+
+
 class BookSerializerWithId(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ( 'id', 'title', 'amount_in_storage', 'author', 'price' )
+        fields = ( 'id', 'title', 'amount_in_storage', 'price' )
 
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ( 'id', 'first_name', 'last_name' )
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ( 'id', 'book_id', 'user_id','message' )
 
 
 

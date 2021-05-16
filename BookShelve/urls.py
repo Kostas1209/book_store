@@ -31,5 +31,6 @@ urlpatterns = [
     path('user_info/', user_views.UserInfoView.as_view()), # +
     path('user_avatar/', user_views.UserAvatarView.as_view()), # That is a problem
     path('logout/', user_views.LogoutView.as_view()), # + need to make autorefresh
+    path('book_comments/', book_views.BookCommentsView.as_view())
 
 ]

@@ -18,7 +18,9 @@ MAX_FILE_SIZE = 1048576  # 1MB
 def get_user_info(user_id):
     #user_id = required_permission(request, "auth.view_user")
     user = User.objects.get(id = user_id)
-    return {"username" : user.username,
+    return {
+        "id": user.id,
+        "username" : user.username,
             "first_name" : user.first_name,
             "last_name" : user.last_name,
             "email" : user.email, 
@@ -68,7 +70,7 @@ def register_user(data):
 
     user = User.objects.create_user(username = serializer.data["username"], email = serializer.data["email"], password = serializer.data["password"],
                              first_name = serializer.data["first_name"], last_name = serializer.data["last_name"])
-    user.groups.set([3]) # client group
+    user.groups.set([1]) # client group
     user.save()
 
     

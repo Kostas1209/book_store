@@ -49,7 +49,8 @@ class GetSingleBookView(APIView):
 class AddBookView(APIView):
     '''
     Add book to library
-    required all info about book which is stored in storage
+    required all info about book which is stored in storage data data.book, 
+    authors ids data.authors_ids
     for managers and admins users
     '''
 
@@ -58,7 +59,6 @@ class AddBookView(APIView):
     @check_group_permission("BookShelve.add_book")
     def post(self, request):
         try:
-            #required_permission(request, "BookShelve.add_book")                             ## Check group permission
             message = book_service.add_book(request.data)
         except NotEnought :
             return Response("Not enought books in the storage", status = 400)
@@ -173,6 +173,41 @@ class MakeOrderView(APIView):
             return Response("Not have such books", status = 400)
         return Response("success", status = 200)
 
+class BookCommentsView(APIView):
+    '''
+        get and post comments about book
+        for authorized users
+    '''
+
+    permission_classes = (IsAuthenticated,)
+
+    @check_group_permission("BookShelve.add_comment")
+    def post(self, request):
+        '''
+            add comment to book
+            required  book_id, message
+            for auth clients
+        '''
+        token_info = token_service.DecodeToken(request.META['HTTP_AUTHORIZATION'][8:-1])
+        book_service.add_comment(request.data, token_info["user_id"])
+
+        return Response("Successfully added", 201)
+
+    @check_group_permission("BookShelve.view_comment")
+    def get(self, request):
+        '''
+            page = number
+            book_id
+        '''
+        try:
+            book_id = int(request.GET.get("book_id","not receive argument"))
+            page = int(request.GET.get("page","not receive argument"))
+
+            comments = book_service.get_comments(book_id, page)
+        except Exception as e:
+            print(e)
+            return Response("Error")
+        return Response({"comments": comments}, status=200)  
 
 class BookCoverView(APIView):
 

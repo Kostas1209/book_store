@@ -1,6 +1,8 @@
-from BookShelve.models import Book, UserBasket
-from BookShelve.serializer import  (BookSerializer, BookChangeSerializer, BookSerializerWithId )
-from BookShelve.Services import token_service
+from django.core.checks import messages
+from rest_framework import response
+from BookShelve.models import Book, UserBasket, Library, Comment, Author
+from BookShelve.serializer import *
+from BookShelve.Services import token_service, user_service
 from django.db.models import F
 from django.core.mail import send_mail
 from BookShelve.check_permission import required_permission
@@ -10,25 +12,28 @@ from celery import shared_task
 import time
 
 
+
+AMOUNT_ITEMS_ON_PAGE = 5
+
 def add_book(data):
-    serializer = BookSerializer(data = data)
+    print(data)
+    serializer = BookSerializer(data = data.book)
     
     #required_permission(request, "BookShelve.add_book")                             ## Check group permission
 
     if serializer.is_valid(raise_exception = True):
-
-        if len(Book.objects.filter(title = serializer.data['title'] ,
-                             author =  serializer.data['author']) ) > 0 :
+        found_books = Book.objects.filter(title = serializer.data['title'])
+        books_in_library = Library.objects.filter(book_id = found_books.id, author_id = data.authors_ids[0])
+        is_book_exists = len(books_in_library) > 0
+        if is_book_exists:
             print(serializer.data)
 
-            Book.objects.filter(title = str(serializer.data['title']), author =  str(serializer.data['author']))\
-                .update(amount_in_storage = F('amount_in_storage') + int(serializer.data['amount_in_storage']) )
+            Book.objects.filter(title = str(serializer.data['title'])).update(amount_in_storage = F('amount_in_storage') + int(serializer.data['amount_in_storage']) )
             return "Book exists , another were added to storage"
 
         else:
             Book.objects.create( title = serializer.data['title'], 
-                               amount_in_storage = serializer.data['amount_in_storage'],
-                                author = serializer.data['author'], price = serializer.data['price'])
+                               amount_in_storage = serializer.data['amount_in_storage'], price = serializer.data['price'])
             return "Books were added to storage"
 
     else:
@@ -44,15 +49,31 @@ def get_book(book_id):
 
     try:
         book = Book.objects.get(id = book_id)
+        authors = []
+        librarys = Library.objects.filter(book_id = book.id).values_list('author_id')
+        authors_queryset = Author.objects.filter(pk__in=librarys) 
+        authors = AuthorSerializer(authors_queryset,many=True).data
     except ValueError:
         raise ValueError
     except Exception:
         raise NotExist
-    serializer = BookSerializerWithId(book,many = False)
-    cache.save_to_cache(CACHE_DATA_NAME,serializer.data)
     print("Get from database")
 
-    return serializer.data
+    return serialize_book(book, authors)
+
+def serialize_book(book, authors):
+    serialized_book = BookSerializer(book).data
+    # serialized_author = AuthorSerializer(authors,many=True).data
+    response = {}
+
+    response["id"] = serialized_book["id"]
+    response["price"] = serialized_book["price"]
+    response['amount_in_storage'] = serialized_book["amount_in_storage"]
+    response['title'] = serialized_book["title"]
+    response['author'] = authors
+    print(response)
+
+    return response
 
 def get_all_books():
     
@@ -62,13 +83,19 @@ def get_all_books():
         return cache.get_from_cache(CACHE_DATA_NAME)
     
     books = Book.objects.all()
+    response_book = list()
+    for book in books:
+        authors = []
+        librarys = Library.objects.filter(book_id = book.id).values_list('author_id')
+        authors_queryset = Author.objects.filter(pk__in=librarys) 
+        authors = AuthorSerializer(authors_queryset,many=True).data
+        response_book.append(serialize_book(book, authors))
+        
+
     if len(books) == 0:
         raise NotExist
-    serializer = BookSerializerWithId(books, many = True)
-    cache.save_to_cache(CACHE_DATA_NAME,serializer.data)
-    print("Get from database")
 
-    return serializer.data
+    return response_book
 
 
 # User Basket
@@ -131,10 +158,19 @@ def get_ordered_books(user_id):
 def get_similar_books(title):
 
     books = Book.objects.filter(title__icontains = str(title))
+    response_book = list()
+    for book in books:
+        authors = []
+        librarys = Library.objects.filter(book_id = book.id).values_list('author_id')
+        authors_queryset = Author.objects.filter(pk__in=librarys) 
+        authors = AuthorSerializer(authors_queryset,many=True).data
+        response_book.append(serialize_book(book, authors))
+        
+
     if len(books) == 0:
-        raise NotFound
-    serializer = BookSerializer(books, many = True)
-    return serializer.data
+        raise NotExist
+
+    return response_book
 
 # 
 def sell_user_order(user_books ):
@@ -167,6 +203,37 @@ def user_post_save():
             ['fig445354545@gmail.com'],
             fail_silently=False,
         )
+
+# comments
+def get_comments(book_id: str, page: int):
+    def serialize_comment_with_user(comment, user):
+        serialized_comment = CommentSerializer(comment).data
+
+        response = {}
+
+        response["id"] = serialized_comment["id"]
+        response["user"] = user
+        response["message"] = serialized_comment["message"]
+
+        print(response)
+
+        return response
+
+
+    comments = Comment.objects.filter(book_id = book_id)
+    # serialized_comments = CommentSerializer(comments, many=True)
+    print(comments)
+    response_comments = list()
+    for comment in comments:
+        print(comment)
+        user = user_service.get_user_info(comment.user_id)
+        response_comments.append(serialize_comment_with_user(comment, user))
+
+    return response_comments
+
+def add_comment(data, user_id):
+    print(data)
+    Comment.objects.create(message=data['message'],book_id=data['book_id'], user_id=user_id)
 
 
 @shared_task

@@ -1,7 +1,5 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser 
-import os
-from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
@@ -11,7 +9,6 @@ class Book(models.Model):
     id = models.AutoField(primary_key = True)
     title = models.CharField(max_length = 200, default = '')
     amount_in_storage = models.IntegerField(default = 0)
-    author = models.CharField(max_length = 100, default = '')
     price = models.IntegerField(default = 0)
 
     def __str__(self):
@@ -37,3 +34,27 @@ class UserAvatar(models.Model):
     def __str__(self):
         return str(self.user_id)
 
+class Author(models.Model):
+    id = models.AutoField(primary_key=True)
+    first_name = models.CharField(max_length=100, default='')
+    last_name = models.CharField(max_length=100, default='')
+
+    def __str__(self):
+        return str(self.first_name)
+
+class Library(models.Model):
+    id = models.AutoField(primary_key=True)
+    book_id = models.IntegerField()
+    author_id = models.IntegerField()
+
+    def __str__(self):
+        return str(self.book_id)
+
+class Comment(models.Model):
+    id = models.AutoField(primary_key=True)
+    book_id = models.IntegerField()
+    user_id = models.IntegerField()
+    message = models.CharField(max_length=1000,default='')
+
+    def __str__(self):
+        return str(self.book_id)

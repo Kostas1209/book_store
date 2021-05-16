@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include,re_path
 from book_store import views
 
+admin.site.site_header = 'My cool admin panel'
 
 urlpatterns = [
     path('admin/', admin.site.urls),

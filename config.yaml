@@ -2,15 +2,15 @@ SECRETE_KEY: "9eoe76)ngvv6znwvfz+2fmv!7lr4vsr-(qvwhu0n2&$%1ia+!)"
 DEBUG: "True"
 
 
-ACCESS_TOKEN_LIFETIME: "300"  #seconds
+ACCESS_TOKEN_LIFETIME: "86400"  #seconds
 REFRESH_TOKEN_LIFETIME: "86400"  #seconds
-SLIDING_TOKEN_LIFETIME: "300"  #seconds
-SLIDING_TOKEN_REFRESH_LIFETIME': "86400 "  #seconds
+SLIDING_TOKEN_LIFETIME: "86400"  #seconds
+SLIDING_TOKEN_REFRESH_LIFETIME': "86400"  #seconds
 
 
 ENGINE: "mysql"
 NAME: "db"
 USER: "root"
 PASSWORD: "1234567890"
-HOST: "db"
+HOST: "localhost"
 PORT: "3306"
