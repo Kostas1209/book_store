@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from datetime import timedelta
 import yaml
+import django_heroku
 
 with open ("config.yaml") as file:
     config = yaml.load(file, Loader = yaml.FullLoader)
@@ -197,3 +198,6 @@ EMAIL_PORT = 587
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+django_heroku.settings(locals())
